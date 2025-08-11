@@ -5,294 +5,350 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>100 Day Task Log</title>
   <style>
-    /* Base tokens */
-    :root {
-      color-scheme: light dark;
-    }
+    :root { color-scheme: light dark; }
     :root[data-theme="light"] {
-      --bg: #f7f7fb;
-      --panel: #ffffff;
-      --card: #ffffff;
-      --text: #0b1020;
-      --muted: #556275;
-      --border: #e6e8ef;
-      --accent: #4f7cff; /* soft blue */
-      --accent-2: #42c47a; /* mint */
-      --danger: #e5484d;
-      --focus: #7aa2ff;
-      --gradient-a: #f7f9ff;
-      --gradient-b: #f2f4fb;
+      --bg: #f7f8fb; --panel: #ffffff; --card: #ffffff; --text: #0b1020; --muted:#5b6578;
+      --border:#e6e8ef; --accent:#4f7cff; --accent-2:#42c47a; --danger:#e5484d; --focus:#7aa2ff;
+      --chip-bg:#eef2ff;
     }
     :root[data-theme="dark"] {
-      --bg: #0f172a;
-      --panel: #111827;
-      --card: #0b1220;
-      --text: #e5e7eb;
-      --muted: #9ca3af;
-      --border: #1f2937;
-      --accent: #7aa2ff; /* airy blue */
-      --accent-2: #62d292; /* mint */
-      --danger: #ef4444;
-      --focus: #9bb7ff;
-      --gradient-a: #0b1020;
-      --gradient-b: #0b0f1a;
+      --bg: #0f172a; --panel:#111827; --card:#0b1220; --text:#e6e9f2; --muted:#9aa3b2;
+      --border:#1f2937; --accent:#86a8ff; --accent-2:#62d292; --danger:#ef4444; --focus:#9bb7ff;
+      --chip-bg:#151d33;
     }
-
     html, body { height: 100%; }
     body {
-      margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
-      Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-      background: linear-gradient(180deg, var(--gradient-a), var(--gradient-b));
+      margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1400px 700px at -10% -20%, color-mix(in oklab, var(--accent) 8%, var(--bg)) 0%, var(--bg) 30%, var(--bg) 100%);
       color: var(--text);
     }
-    .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
-    header { position: sticky; top: 0; backdrop-filter: blur(8px); background: color-mix(in oklab, var(--gradient-a) 75%, transparent);
-      z-index: 10; border-bottom: 1px solid var(--border); }
-    header .bar { display: flex; gap: 12px; align-items: center; padding: 12px 20px; flex-wrap: wrap; }
-    h1 { font-size: 20px; margin: 0 6px 0 0; letter-spacing: .2px; }
-    button, .btn, select, input[type="text"], input[type="time"], input[type="number"] {
-      background: var(--card); color: var(--text); border: 1px solid var(--border);
-      padding: 8px 10px; border-radius: 10px; font-size: 14px;
-    }
-    button { cursor: pointer; transition: 120ms ease; display: inline-flex; align-items: center; gap: 8px; }
-    button:hover, select:hover { border-color: var(--accent); }
-    button.accent { background: color-mix(in oklab, var(--accent) 15%, var(--card)); border-color: var(--accent); }
+    .container { max-width: 1100px; margin: 0 auto; padding: 18px; }
+    header { position: sticky; top: 0; backdrop-filter: blur(10px); background: color-mix(in oklab, var(--bg) 80%, transparent); z-index: 10; border-bottom: 1px solid var(--border); }
+    header .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 12px 18px; }
+    h1 { font-size: 18px; margin: 0 8px 0 0; letter-spacing: .2px; }
+    .spacer { flex: 1; }
+
+    /* Controls */
+    select, input[type="text"], input[type="time"], button { border-radius: 10px; font-size: 14px; }
+    select, input[type="text"], input[type="time"] { padding: 8px 10px; border: 1px solid var(--border); background: var(--card); color: var(--text); outline: none; }
+    select:focus, input:focus { border-color: var(--focus); box-shadow: 0 0 0 3px color-mix(in oklab, var(--focus) 30%, transparent); }
+    button { padding: 8px 12px; border: 1px solid var(--border); background: color-mix(in oklab, var(--card) 80%, var(--accent)); color: var(--text); cursor: pointer; }
+    button.primary { background: color-mix(in oklab, var(--accent) 20%, var(--card)); border-color: var(--accent); }
     button.danger { background: color-mix(in oklab, var(--danger) 15%, var(--card)); border-color: var(--danger); }
-    input[type="text"], input[type="time"], input[type="number"], select { outline: none; }
-    input[type="text"]:focus, input[type="time"]:focus, input[type="number"]:focus, select:focus {
-      border-color: var(--focus); box-shadow: 0 0 0 3px color-mix(in oklab, var(--focus) 30%, transparent);
-    }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
-    .card { background: radial-gradient(1200px 600px at -20% -20%, color-mix(in oklab, var(--accent) 8%, var(--card)) 0%, var(--card) 40%, var(--card) 100%);
-      border: 1px solid var(--border); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; }
-    .date-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-    .date { font-weight: 700; font-size: 14px; }
+
+    /* Layout */
+    .flex { display: flex; gap: 10px; align-items: center; }
+    .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+
+    /* Day card */
+    .card { background: radial-gradient(1000px 500px at -20% -20%, color-mix(in oklab, var(--accent) 8%, var(--card)) 0%, var(--card) 40%, var(--card) 100%);
+      border: 1px solid var(--border); border-radius: 16px; padding: 14px; }
+    .date-row { display: flex; justify-content: space-between; align-items: center; }
+    .date { font-weight: 700; }
     .muted { color: var(--muted); font-size: 12px; }
     .tasks { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
-    .task { display: grid; grid-template-columns: 1fr 100px 30px; gap: 8px; align-items: center; }
-    .task input[type="text"] { width: 100%; }
-    .task input[type="time"] { width: 100%; }
-    .task button.small { padding: 6px; border-radius: 8px; }
-    .row-actions { display: flex; gap: 8px; margin-top: 8px; }
-    .total { font-weight: 600; font-variant-numeric: tabular-nums; }
-    .footer { margin-top: 14px; display: flex; justify-content: space-between; align-items: center; }
-    .pill { border: 1px solid var(--border); padding: 2px 8px; border-radius: 999px; font-size: 12px; color: var(--muted); }
-    .search-wrap { margin-left: auto; display: flex; align-items: center; gap: 6px; }
-    #search { width: 220px; }
-    .tip { font-size: 12px; color: var(--muted); margin-left: 8px; }
-    .spacer { flex: 1; }
-    .status { font-size: 12px; color: var(--muted); }
-    @media (max-width: 640px) { #search { width: 140px; } }
+    .task { display: grid; grid-template-columns: 1fr 130px 110px 34px; gap: 8px; align-items: center; }
+    .total { font-weight: 600; font-variant-numeric: tabular-nums; padding: 4px 10px; border-radius: 999px; background: var(--chip-bg); border: 1px solid var(--border); }
+
+    /* Category chip and menu */
+    .chip { display: inline-flex; align-items: center; gap: 8px; padding: 2px 8px; border: 1px solid var(--border); border-radius: 999px; background: var(--chip-bg); font-size: 12px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; border: 1px solid var(--border); }
+
+    /* Running log */
+    #logWrap { margin-top: 16px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid var(--border); padding: 8px 10px; text-align: left; font-size: 14px; }
+    th { font-weight: 600; }
+    .table-head { background: color-mix(in oklab, var(--card) 80%, var(--panel)); }
+
+    /* Modal */
+    .modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,.35); }
+    .modal .box { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 14px; width: min(520px, 92vw); }
+    .row { display: grid; grid-template-columns: 1fr 120px 40px; gap: 8px; align-items: center; }
   </style>
 </head>
 <body>
   <header>
-    <div class="bar container">
+    <div class="bar">
       <h1>100 Day Task Log</h1>
-      <select id="dayPicker" title="Go to day"></select>
-      <button id="themeToggle" class="btn" title="Toggle light/dark">Theme</button>
-      <button id="exportJson" class="btn">Export JSON</button>
-      <button id="exportCsv" class="btn">Export CSV</button>
-      <input id="importFile" type="file" accept=".json" style="display:none" />
-      <button id="importBtn" class="btn">Import JSON</button>
-      <button id="clearAll" class="btn danger">Clear All</button>
-      <div class="search-wrap">
-        <input id="search" type="text" placeholder="Search tasks or dates" />
-        <span class="tip">Autosaves as you type</span>
+      <div class="flex">
+        <label for="daySelect" class="muted">Day</label>
+        <select id="daySelect"></select>
+        <button id="addTask" class="primary">Add Task</button>
+      </div>
+      <div class="flex">
+        <button id="openCats">Categories</button>
+        <label class="muted" for="filterCat">Filter</label>
+        <select id="filterCat"></select>
+        <button id="toggleLog">Running Log</button>
       </div>
       <span class="spacer"></span>
-      <div class="legend">
-        <span class="status" id="saveStatus">Saved</span>
-      </div>
+      <button id="toggleMode">Theme</button>
     </div>
   </header>
 
-  <main class="container" style="padding-top: 14px;">
-    <div id="grid" class="grid"></div>
+  <main class="container">
+    <section id="daySection" class="panel">
+      <div id="dayCard" class="card"></div>
+    </section>
+
+    <section id="logWrap" class="panel" style="display:none">
+      <div class="flex" style="justify-content: space-between;">
+        <h2 style="margin:0;font-size:16px;">Running Log</h2>
+        <div class="total" id="logTotal">0h 00m</div>
+      </div>
+      <div style="overflow:auto;">
+        <table>
+          <thead class="table-head">
+            <tr><th>Date</th><th>Category</th><th>Task</th><th>Time</th></tr>
+          </thead>
+          <tbody id="logBody"></tbody>
+        </table>
+      </div>
+    </section>
   </main>
 
-  <template id="cardTemplate">
-    <div class="card" data-date="">
-      <div class="date-row">
-        <div>
-          <div class="date"></div>
-          <div class="muted dow"></div>
-        </div>
-        <div class="pill total">0h 00m</div>
+  <!-- Categories modal -->
+  <div id="catModal" class="modal">
+    <div class="box">
+      <div class="flex" style="justify-content: space-between;">
+        <h3 style="margin:0;font-size:16px;">Task Categories</h3>
+        <button id="closeCats">Close</button>
       </div>
-      <div class="tasks"></div>
-      <div class="row-actions">
-        <button class="addTask accent">Add Task</button>
-        <button class="clearDay danger" title="Remove all tasks for this day">Clear Day</button>
-      </div>
-      <div class="footer">
-        <span class="muted">Tip: use HH:MM format</span>
-        <span class="muted">Everything autosaves</span>
+      <div id="catList" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
+      <div class="row" style="margin-top:8px;">
+        <input type="text" id="newCatName" placeholder="New category name" />
+        <input type="color" id="newCatColor" value="#4f7cff" />
+        <button id="addCat" class="primary">Add</button>
       </div>
     </div>
-  </template>
+  </div>
 
-  <template id="taskTemplate">
+  <template id="taskRowTpl">
     <div class="task">
-      <input type="text" class="t-name" placeholder="Task description" />
+      <input type="text" class="t-name" placeholder="Task" />
+      <select class="t-cat"></select>
       <input type="time" class="t-time" step="60" />
-      <button class="small danger remove" title="Remove task">×</button>
+      <button class="danger t-del">×</button>
     </div>
   </template>
 
   <script>
-    // Date helpers
-    function fmtDate(d) { const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
-    function humanDate(d) { return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); }
-    function dayName(d) { return d.toLocaleDateString(undefined, { weekday: 'long' }); }
-
-    // Storage
-    const KEY = 'tasklog.v1';
+    // Keys and state
+    const KEY = 'tasklog.v3';
+    const CAT_KEY = 'tasklog.categories.v1';
     const THEME_KEY = 'tasklog.theme';
-    let store = load();
-    function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } }
-    function saveSoon() {
-      setStatus('Saving…');
-      if (saveSoon._t) cancelAnimationFrame(saveSoon._t);
-      saveSoon._t = requestAnimationFrame(() => { localStorage.setItem(KEY, JSON.stringify(store)); setStatus('Saved'); });
-    }
-    function setStatus(text) { document.getElementById('saveStatus').textContent = text; }
+    let store = JSON.parse(localStorage.getItem(KEY) || '{}');
+    let categories = JSON.parse(localStorage.getItem(CAT_KEY) || '[]');
 
-    // Theme
+    if (categories.length === 0) {
+      categories = [
+        { id: 'work', name: 'Work', color: '#4f7cff' },
+        { id: 'study', name: 'Study', color: '#42c47a' },
+        { id: 'admin', name: 'Admin', color: '#f59e0b' },
+        { id: 'break', name: 'Break', color: '#ef4444' }
+      ];
+      localStorage.setItem(CAT_KEY, JSON.stringify(categories));
+    }
+
     const root = document.documentElement;
     function applyTheme(t){ root.setAttribute('data-theme', t); }
     function getPreferredTheme(){ const s=localStorage.getItem(THEME_KEY); if (s) return s; return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; }
-    let theme = getPreferredTheme();
-    applyTheme(theme);
-    document.getElementById('themeToggle').addEventListener('click', ()=>{ theme = theme==='light' ? 'dark' : 'light'; localStorage.setItem(THEME_KEY, theme); applyTheme(theme); });
+    let theme = getPreferredTheme(); applyTheme(theme);
+    document.getElementById('toggleMode').addEventListener('click', ()=>{ theme = theme==='light' ? 'dark' : 'light'; localStorage.setItem(THEME_KEY, theme); applyTheme(theme); });
 
-    // Build next 100 days
-    const grid = document.getElementById('grid');
-    const cardTpl = document.getElementById('cardTemplate');
-    const taskTpl = document.getElementById('taskTemplate');
+    // Date helpers
+    function fmtDate(d){ const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
+    function humanDate(d){ return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); }
+    function dayName(d){ return d.toLocaleDateString(undefined, { weekday: 'long' }); }
+
+    const daySelect = document.getElementById('daySelect');
+    const dayCard = document.getElementById('dayCard');
+    const taskTpl = document.getElementById('taskRowTpl');
 
     const start = new Date(); start.setHours(0,0,0,0);
-    const dates = Array.from({ length: 100 }, (_, i) => { const d = new Date(start); d.setDate(d.getDate() + i); return d; });
-    const elsByDate = {};
+    const dates = Array.from({ length: 100 }, (_, i) => { const d=new Date(start); d.setDate(d.getDate()+i); return d; });
 
+    // Populate day picker
     for (const d of dates) {
+      const opt = document.createElement('option');
       const ds = fmtDate(d);
-      const card = cardTpl.content.firstElementChild.cloneNode(true);
-      card.dataset.date = ds;
-      card.querySelector('.date').textContent = humanDate(d);
-      card.querySelector('.dow').textContent = dayName(d);
+      opt.value = ds; opt.textContent = `${dayName(d)}, ${humanDate(d)}`;
+      daySelect.appendChild(opt);
+    }
+    const todayStr = fmtDate(new Date(start)); daySelect.value = todayStr;
 
-      const tasksWrap = card.querySelector('.tasks');
-      const tasks = (store[ds] && store[ds].tasks) || [];
-      if (tasks.length === 0) addTaskRow(tasksWrap); else { for (const t of tasks) addTaskRow(tasksWrap, t.name, t.time); }
+    // Render a day
+    function renderDay(ds){
+      dayCard.innerHTML = '';
+      const dParts = ds.split('-'); const d = new Date(Number(dParts[0]), Number(dParts[1])-1, Number(dParts[2]));
+      const head = document.createElement('div'); head.className = 'date-row';
+      head.innerHTML = `<div><div class="date">${humanDate(d)}</div><div class="muted">${dayName(d)}</div></div><div class="total" id="dayTotal">0h 00m</div>`;
+      dayCard.appendChild(head);
 
-      updateTotal(card);
-
-      card.querySelector('.addTask').addEventListener('click', () => {
-        const row = addTaskRow(tasksWrap); row.querySelector('.t-name').focus(); persistCard(card);
-      });
-      card.querySelector('.clearDay').addEventListener('click', () => {
-        if (!confirm('Clear all tasks for this day')) return;
-        tasksWrap.innerHTML = ''; addTaskRow(tasksWrap); persistCard(card); updateTotal(card);
-      });
-
-      grid.appendChild(card);
-      elsByDate[ds] = card;
+      const list = document.createElement('div'); list.className = 'tasks'; dayCard.appendChild(list);
+      const items = store[ds] || [];
+      if (items.length === 0) addTaskRow(list, ds); else items.forEach(t => addTaskRow(list, ds, t.name, t.cat, t.time));
+      updateDayTotal();
     }
 
-    // Task rows and totals
-    function addTaskRow(wrapper, name = '', time = '') {
+    function addTaskRow(wrapper, ds, name='', catId='', time=''){
       const row = taskTpl.content.firstElementChild.cloneNode(true);
-      const nameEl = row.querySelector('.t-name');
-      const timeEl = row.querySelector('.t-time');
+      const nameEl = row.querySelector('.t-name'); const catEl = row.querySelector('.t-cat'); const timeEl = row.querySelector('.t-time');
+      // Fill categories
+      fillCatOptions(catEl, catId);
       nameEl.value = name; timeEl.value = time;
+
+      // Keyboard: Enter on name moves to time, Enter on time adds new row
       nameEl.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); timeEl.focus(); } });
-      nameEl.addEventListener('input', onAnyChange); timeEl.addEventListener('input', onAnyChange);
-      row.querySelector('.remove').addEventListener('click', () => { row.remove(); const card = wrapper.closest('.card'); persistCard(card); updateTotal(card); });
-      wrapper.appendChild(row); return row;
+      timeEl.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); const nr = addTaskRow(wrapper, ds); nr.querySelector('.t-name').focus(); saveDay(ds); } });
+
+      // Change handlers
+      nameEl.addEventListener('input', () => { saveDay(ds); });
+      timeEl.addEventListener('input', () => { saveDay(ds); updateDayTotal(); });
+      catEl.addEventListener('change', () => { saveDay(ds); renderLog(); });
+
+      row.querySelector('.t-del').addEventListener('click', () => { row.remove(); saveDay(ds); updateDayTotal(); renderLog(); });
+
+      wrapper.appendChild(row);
+      return row;
     }
-    function onAnyChange(e){ const card = e.target.closest('.card'); persistCard(card); updateTotal(card); }
-    function getCardData(card){ const ds = card.dataset.date; const rows = Array.from(card.querySelectorAll('.task')); const tasks = rows.map(r => ({ name: r.querySelector('.t-name').value.trim(), time: r.querySelector('.t-time').value })).filter(t => t.name || t.time); return { date: ds, tasks }; }
-    function persistCard(card){ const data = getCardData(card); store[data.date] = { tasks: data.tasks }; saveSoon(); }
-    function parseTimeToMinutes(str){ if (!str) return 0; const [h,m] = str.split(':').map(Number); if (Number.isFinite(h)&&Number.isFinite(m)) return h*60+m; return 0; }
+
+    function fillCatOptions(selectEl, selectedId){
+      selectEl.innerHTML = '';
+      const none = document.createElement('option'); none.value = ''; none.textContent = 'Uncategorized'; selectEl.appendChild(none);
+      for (const c of categories) { const o=document.createElement('option'); o.value=c.id; o.textContent=c.name; if (c.id===selectedId) o.selected=true; selectEl.appendChild(o); }
+    }
+
+    function saveDay(ds){
+      const rows = Array.from(dayCard.querySelectorAll('.task'));
+      store[ds] = rows.map(r => ({
+        name: r.querySelector('.t-name').value.trim(),
+        cat: r.querySelector('.t-cat').value,
+        time: r.querySelector('.t-time').value
+      })).filter(t => t.name || t.time || t.cat);
+      localStorage.setItem(KEY, JSON.stringify(store));
+      renderLog();
+    }
+
+    function parseTimeToMinutes(str){ if (!str) return 0; const [h,m] = str.split(':').map(Number); return (isFinite(h)&&isFinite(m)) ? h*60+m : 0; }
     function minutesToHm(mins){ const h=Math.floor(mins/60); const m=mins%60; return `${h}h ${String(m).padStart(2,'0')}m`; }
-    function updateTotal(card){ const rows = card.querySelectorAll('.t-time'); let total = 0; rows.forEach(t => total += parseTimeToMinutes(t.value)); card.querySelector('.total').textContent = minutesToHm(total); }
+    function updateDayTotal(){
+      const total = Array.from(dayCard.querySelectorAll('.t-time')).reduce((acc,el)=>acc+parseTimeToMinutes(el.value),0);
+      const el = document.getElementById('dayTotal'); if (el) el.textContent = minutesToHm(total);
+    }
 
-    // Day picker: jump to a day and start adding
-    const dayPicker = document.getElementById('dayPicker');
-    for (const d of dates) { const opt = document.createElement('option'); const ds = fmtDate(d); opt.value = ds; opt.textContent = `${dayName(d)}, ${humanDate(d)}`; dayPicker.appendChild(opt); }
-    function jumpToDay(ds){ const card = elsByDate[ds]; if (!card) return; card.scrollIntoView({ behavior: 'smooth', block: 'start' }); const tasksWrap = card.querySelector('.tasks'); if (tasksWrap.children.length === 0) addTaskRow(tasksWrap); const firstName = card.querySelector('.t-name'); if (firstName) firstName.focus(); }
-    dayPicker.addEventListener('change', () => jumpToDay(dayPicker.value));
+    // Running log
+    const logWrap = document.getElementById('logWrap');
+    const logBody = document.getElementById('logBody');
+    const logTotal = document.getElementById('logTotal');
+    const filterCat = document.getElementById('filterCat');
 
-    const todayStr = fmtDate(new Date(start)); dayPicker.value = todayStr; jumpToDay(todayStr);
+    function renderFilter(){
+      filterCat.innerHTML='';
+      const all = document.createElement('option'); all.value=''; all.textContent='All'; filterCat.appendChild(all);
+      for (const c of categories) { const o=document.createElement('option'); o.value=c.id; o.textContent=c.name; filterCat.appendChild(o); }
+    }
 
-    // Export JSON
-    document.getElementById('exportJson').addEventListener('click', () => {
-      const payload = { meta: { generated: new Date().toISOString() }, days: store };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob); download(url, 'task-log.json');
-    });
-
-    // Export CSV
-    document.getElementById('exportCsv').addEventListener('click', () => {
-      const rows = [ ['Date','Task','Time'] ];
-      const datesSorted = Object.keys(store).sort();
-      for (const d of datesSorted) {
-        const tasks = (store[d] && store[d].tasks) || [];
-        if (tasks.length === 0) rows.push([d,'','']);
-        for (const t of tasks) rows.push([d, t.name || '', t.time || '']);
+    function renderLog(){
+      const entries = [];
+      for (const ds of Object.keys(store)){
+        for (const t of store[ds]){ entries.push({ date: ds, name: t.name || '', time: t.time || '', cat: t.cat || '' }); }
       }
-      const csv = rows.map(r => r.map(s => '"' + String(s).replace(/"/g,'""') + '"').join(',')).join('\n');
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob); download(url, 'task-log.csv');
-    });
-
-    function download(url, filename){ const a = document.createElement('a'); a.href = url; a.download = filename; a.style.display = 'none'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0); }
-
-    // Import JSON
-    const importInput = document.getElementById('importFile');
-    document.getElementById('importBtn').addEventListener('click', () => importInput.click());
-    importInput.addEventListener('change', () => {
-      const file = importInput.files[0]; if (!file) return; const reader = new FileReader();
-      reader.onload = () => {
-        try {
-          const data = JSON.parse(reader.result);
-          if (!data.days || typeof data.days !== 'object') throw new Error('Invalid file');
-          store = data.days;
-          for (const d of dates) {
-            const ds = fmtDate(d); const card = elsByDate[ds]; const tasksWrap = card.querySelector('.tasks');
-            tasksWrap.innerHTML = '';
-            const tasks = (store[ds] && store[ds].tasks) || [];
-            if (tasks.length === 0) addTaskRow(tasksWrap);
-            for (const t of tasks) addTaskRow(tasksWrap, t.name, t.time);
-            updateTotal(card);
-          }
-          saveSoon(); alert('Import complete');
-        } catch (e) { alert('Could not import this file'); }
-        importInput.value = '';
-      };
-      reader.readAsText(file);
-    });
-
-    // Search filter
-    document.getElementById('search').addEventListener('input', e => {
-      const q = e.target.value.toLowerCase();
-      for (const d of dates) {
-        const ds = fmtDate(d);
-        const card = elsByDate[ds];
-        const text = [ds, card.querySelector('.date').textContent, ...Array.from(card.querySelectorAll('.t-name')).map(n => n.value)]
-          .join(' ').toLowerCase();
-        card.style.display = text.includes(q) ? '' : 'none';
+      entries.sort((a,b)=> a.date.localeCompare(b.date));
+      const catFilter = filterCat.value || '';
+      logBody.innerHTML = '';
+      let total = 0;
+      for (const e of entries){
+        if (catFilter && e.cat !== catFilter) continue;
+        const tr = document.createElement('tr');
+        const cat = categories.find(c => c.id === e.cat);
+        const color = cat ? cat.color : '#9aa3b2';
+        const catName = cat ? cat.name : 'Uncategorized';
+        tr.innerHTML = `<td>${e.date}</td><td><span class="chip"><span class="dot" style="background:${color}"></span>${catName}</span></td><td>${escapeHtml(e.name)}</td><td>${e.time}</td>`;
+        logBody.appendChild(tr);
+        total += parseTimeToMinutes(e.time);
       }
+      logTotal.textContent = minutesToHm(total);
+    }
+
+    function escapeHtml(s){ return s.replace(/[&<>\"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c])); }
+
+    // Categories modal logic
+    const catModal = document.getElementById('catModal');
+    const catList = document.getElementById('catList');
+    const newCatName = document.getElementById('newCatName');
+    const newCatColor = document.getElementById('newCatColor');
+
+    function openModal(){ catModal.style.display='flex'; renderCatList(); }
+    function closeModal(){ catModal.style.display='none'; }
+
+    function renderCatList(){
+      catList.innerHTML = '';
+      for (const c of categories){
+        const row = document.createElement('div'); row.className='row';
+        row.innerHTML = `<input type="text" value="${c.name}" data-id="${c.id}" class="c-name" />`+
+                        `<input type="color" value="${c.color}" data-id="${c.id}" class="c-color" />`+
+                        `<button class="danger c-del" data-id="${c.id}">×</button>`;
+        catList.appendChild(row);
+      }
+      // Hook up events
+      catList.querySelectorAll('.c-name').forEach(el => el.addEventListener('input', onEditCat));
+      catList.querySelectorAll('.c-color').forEach(el => el.addEventListener('input', onEditCat));
+      catList.querySelectorAll('.c-del').forEach(el => el.addEventListener('click', onDeleteCat));
+    }
+
+    function onEditCat(e){
+      const id = e.target.getAttribute('data-id');
+      const idx = categories.findIndex(c => c.id === id);
+      if (idx === -1) return;
+      if (e.target.classList.contains('c-name')) categories[idx].name = e.target.value;
+      if (e.target.classList.contains('c-color')) categories[idx].color = e.target.value;
+      localStorage.setItem(CAT_KEY, JSON.stringify(categories));
+      // refresh selects and log
+      refreshAllCatSelects(); renderFilter(); renderLog();
+    }
+
+    function onDeleteCat(e){
+      const id = e.target.getAttribute('data-id');
+      categories = categories.filter(c => c.id !== id);
+      localStorage.setItem(CAT_KEY, JSON.stringify(categories));
+      renderCatList(); refreshAllCatSelects(); renderFilter(); renderLog();
+    }
+
+    document.getElementById('addCat').addEventListener('click', () => {
+      const name = newCatName.value.trim(); const color = newCatColor.value;
+      if (!name) return;
+      const id = name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+      if (categories.some(c => c.id === id)) { alert('Category exists'); return; }
+      categories.push({ id, name, color });
+      localStorage.setItem(CAT_KEY, JSON.stringify(categories));
+      newCatName.value=''; renderCatList(); refreshAllCatSelects(); renderFilter(); renderLog();
     });
 
-    // Clear all
-    document.getElementById('clearAll').addEventListener('click', () => {
-      if (!confirm('Delete everything')) return;
-      localStorage.removeItem(KEY); store = {};
-      for (const d of dates) { const ds = fmtDate(d); const card = elsByDate[ds]; const tasksWrap = card.querySelector('.tasks'); tasksWrap.innerHTML = ''; addTaskRow(tasksWrap); updateTotal(card); }
-      setStatus('Cleared');
+    function refreshAllCatSelects(){
+      document.querySelectorAll('select.t-cat').forEach(sel => {
+        const selected = sel.value;
+        fillCatOptions(sel, selected);
+      });
+    }
+
+    document.getElementById('openCats').addEventListener('click', openModal);
+    document.getElementById('closeCats').addEventListener('click', closeModal);
+    catModal.addEventListener('click', (e)=>{ if (e.target === catModal) closeModal(); });
+
+    // Controls
+    document.getElementById('addTask').addEventListener('click', () => {
+      const ds = daySelect.value; const list = dayCard.querySelector('.tasks'); const row = addTaskRow(list, ds); row.querySelector('.t-name').focus(); saveDay(ds);
     });
+    daySelect.addEventListener('change', () => renderDay(daySelect.value));
+    document.getElementById('toggleLog').addEventListener('click', () => { logWrap.style.display = logWrap.style.display === 'none' ? '' : 'none'; });
+    filterCat.addEventListener('change', renderLog);
+
+    // Initial paint
+    renderFilter();
+    renderDay(todayStr);
+    renderLog();
   </script>
 </body>
 </html>
