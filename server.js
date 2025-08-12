@@ -1,4 +1,3 @@
-
 import express from 'express';
 import cors from 'cors';
 import { MongoClient } from 'mongodb';
@@ -11,20 +10,36 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 8787;
-const MONGODB_URI = process.env.MONGODB_URI; // mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net
+const MONGODB_URI = process.env.MONGODB_URI; // mongodb+srv://cchambers:Bo7Z6uE7l83VVbSD@cluster0.xxxxx.mongodb.net
 const DB_NAME = process.env.DB_NAME || 'tasklog';
 
 if (!MONGODB_URI) {
-  console.error('Missing MONGODB_URI in .env');
+  console.error('❌ Missing MONGODB_URI in .env');
   process.exit(1);
 }
 
-const client = new MongoClient(MONGODB_URI, { maxPoolSize: 10 });
-await client.connect();
-const db = client.db(DB_NAME);
-const daysCol = db.collection('tasklog_days');
-const catsCol = db.collection('tasklog_categories');
-await daysCol.createIndex({ date: 1 }, { unique: true });
+let client, db, daysCol, catsCol;
+
+try {
+  client = new MongoClient(MONGODB_URI, { maxPoolSize: 10 });
+  await client.connect();
+  db = client.db(DB_NAME);
+
+  console.log(`✅ Connected to MongoDB cluster`);
+  console.log(`   Database: ${DB_NAME}`);
+
+  // List collections for verification
+  const collections = await db.listCollections().toArray();
+  console.log(`   Collections in this DB:`, collections.map(c => c.name));
+
+  daysCol = db.collection('tasklog_days');
+  catsCol = db.collection('tasklog_categories');
+
+  await daysCol.createIndex({ date: 1 }, { unique: true });
+} catch (err) {
+  console.error('❌ Failed to connect to MongoDB:', err);
+  process.exit(1);
+}
 
 // Health
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
@@ -72,4 +87,4 @@ app.put('/api/categories', async (req, res) => {
   res.json({ ok: true });
 });
 
-app.listen(PORT, () => console.log(`Task Log API listening on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Task Log API listening on http://localhost:${PORT}`));
