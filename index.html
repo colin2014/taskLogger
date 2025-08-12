@@ -1,3 +1,19 @@
+<!--
+Files in this canvas:
+1) index.html  (frontend with MongoDB sync)
+2) server.js   (Express API for MongoDB Atlas Cluster0)
+3) .env.sample (env vars)
+
+How it works
+- The frontend keeps instant localStorage writes for offline use, then syncs to the server.
+- Set API_BASE in the HTML to your backend URL. For local dev use http://localhost:8787
+- Start the server with `node server.js` after creating a .env from .env.sample.
+- Collections: tasklog_days, tasklog_categories
+-->
+
+<!-- ============================
+= 1) index.html
+============================= -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -28,7 +44,6 @@
     h1 { font-size: 18px; margin: 0 8px 0 0; letter-spacing: .2px; }
     .spacer { flex: 1; }
 
-    /* Controls */
     select, input[type="text"], input[type="time"], button { border-radius: 10px; font-size: 14px; }
     select, input[type="text"], input[type="time"] { padding: 8px 10px; border: 1px solid var(--border); background: var(--card); color: var(--text); outline: none; }
     select:focus, input:focus { border-color: var(--focus); box-shadow: 0 0 0 3px color-mix(in oklab, var(--focus) 30%, transparent); }
@@ -36,11 +51,9 @@
     button.primary { background: color-mix(in oklab, var(--accent) 20%, var(--card)); border-color: var(--accent); }
     button.danger { background: color-mix(in oklab, var(--danger) 15%, var(--card)); border-color: var(--danger); }
 
-    /* Layout */
     .flex { display: flex; gap: 10px; align-items: center; }
     .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
 
-    /* Day card */
     .card { background: radial-gradient(1000px 500px at -20% -20%, color-mix(in oklab, var(--accent) 8%, var(--card)) 0%, var(--card) 40%, var(--card) 100%);
       border: 1px solid var(--border); border-radius: 16px; padding: 14px; }
     .date-row { display: flex; justify-content: space-between; align-items: center; }
@@ -50,18 +63,15 @@
     .task { display: grid; grid-template-columns: 1fr 130px 110px 34px; gap: 8px; align-items: center; }
     .total { font-weight: 600; font-variant-numeric: tabular-nums; padding: 4px 10px; border-radius: 999px; background: var(--chip-bg); border: 1px solid var(--border); }
 
-    /* Category chip and menu */
     .chip { display: inline-flex; align-items: center; gap: 8px; padding: 2px 8px; border: 1px solid var(--border); border-radius: 999px; background: var(--chip-bg); font-size: 12px; }
     .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; border: 1px solid var(--border); }
 
-    /* Running log */
     #logWrap { margin-top: 16px; }
     table { width: 100%; border-collapse: collapse; }
     th, td { border-bottom: 1px solid var(--border); padding: 8px 10px; text-align: left; font-size: 14px; }
     th { font-weight: 600; }
     .table-head { background: color-mix(in oklab, var(--card) 80%, var(--panel)); }
 
-    /* Modal */
     .modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,.35); }
     .modal .box { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 14px; width: min(520px, 92vw); }
     .row { display: grid; grid-template-columns: 1fr 120px 40px; gap: 8px; align-items: center; }
@@ -108,7 +118,6 @@
     </section>
   </main>
 
-  <!-- Categories modal -->
   <div id="catModal" class="modal">
     <div class="box">
       <div class="flex" style="justify-content: space-between;">
@@ -134,14 +143,31 @@
   </template>
 
   <script>
-    // Keys and state
+    // ===== Backend config =====
+    const API_BASE = localStorage.getItem('tasklog.api') || 'http://localhost:8787'; // change to your server URL
+    const USE_SERVER = true; // set false to work only offline
+
+    // ===== Keys and state =====
     const KEY = 'tasklog.v3';
     const CAT_KEY = 'tasklog.categories.v1';
     const THEME_KEY = 'tasklog.theme';
     let store = JSON.parse(localStorage.getItem(KEY) || '{}');
     let categories = JSON.parse(localStorage.getItem(CAT_KEY) || '[]');
 
-    if (categories.length === 0) {
+    async function serverGet(path) {
+      const r = await fetch(`${API_BASE}${path}`, { credentials: 'omit' });
+      if (!r.ok) throw new Error('Server error');
+      return r.json();
+    }
+    async function serverPut(path, body) {
+      const r = await fetch(`${API_BASE}${path}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      if (!r.ok) throw new Error('Server error');
+      return r.json();
+    }
+
+    // Seed categories on first run
+    async function ensureDefaultCategories() {
+      if (categories.length > 0) return;
       categories = [
         { id: 'work', name: 'Work', color: '#4f7cff' },
         { id: 'study', name: 'Study', color: '#42c47a' },
@@ -149,6 +175,7 @@
         { id: 'break', name: 'Break', color: '#ef4444' }
       ];
       localStorage.setItem(CAT_KEY, JSON.stringify(categories));
+      if (USE_SERVER) await serverPut('/api/categories', { categories });
     }
 
     const root = document.documentElement;
@@ -157,7 +184,6 @@
     let theme = getPreferredTheme(); applyTheme(theme);
     document.getElementById('toggleMode').addEventListener('click', ()=>{ theme = theme==='light' ? 'dark' : 'light'; localStorage.setItem(THEME_KEY, theme); applyTheme(theme); });
 
-    // Date helpers
     function fmtDate(d){ const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
     function humanDate(d){ return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); }
     function dayName(d){ return d.toLocaleDateString(undefined, { weekday: 'long' }); }
@@ -169,7 +195,6 @@
     const start = new Date(); start.setHours(0,0,0,0);
     const dates = Array.from({ length: 100 }, (_, i) => { const d=new Date(start); d.setDate(d.getDate()+i); return d; });
 
-    // Populate day picker
     for (const d of dates) {
       const opt = document.createElement('option');
       const ds = fmtDate(d);
@@ -178,8 +203,36 @@
     }
     const todayStr = fmtDate(new Date(start)); daySelect.value = todayStr;
 
-    // Render a day
-    function renderDay(ds){
+    async function loadDay(ds) {
+      if (!USE_SERVER) return store[ds] || [];
+      try {
+        const data = await serverGet(`/api/day/${ds}`);
+        store[ds] = data.items || [];
+        localStorage.setItem(KEY, JSON.stringify(store));
+      } catch (e) {
+        console.warn('Falling back to local day', e);
+      }
+      return store[ds] || [];
+    }
+
+    async function saveDay(ds){
+      const rows = Array.from(dayCard.querySelectorAll('.task'));
+      store[ds] = rows.map(r => ({
+        name: r.querySelector('.t-name').value.trim(),
+        cat: r.querySelector('.t-cat').value,
+        time: r.querySelector('.t-time').value
+      })).filter(t => t.name || t.time || t.cat);
+      localStorage.setItem(KEY, JSON.stringify(store));
+      if (USE_SERVER) {
+        try { await serverPut(`/api/day/${ds}`, { items: store[ds] }); } catch(e){ console.warn('Save failed, kept offline', e); }
+      }
+      renderLog();
+    }
+
+    function parseTimeToMinutes(str){ if (!str) return 0; const [h,m] = str.split(':').map(Number); return (isFinite(h)&&isFinite(m)) ? h*60+m : 0; }
+    function minutesToHm(mins){ const h=Math.floor(mins/60); const m=mins%60; return `${h}h ${String(m).padStart(2,'0')}m`; }
+
+    async function renderDay(ds){
       dayCard.innerHTML = '';
       const dParts = ds.split('-'); const d = new Date(Number(dParts[0]), Number(dParts[1])-1, Number(dParts[2]));
       const head = document.createElement('div'); head.className = 'date-row';
@@ -187,7 +240,7 @@
       dayCard.appendChild(head);
 
       const list = document.createElement('div'); list.className = 'tasks'; dayCard.appendChild(list);
-      const items = store[ds] || [];
+      const items = await loadDay(ds);
       if (items.length === 0) addTaskRow(list, ds); else items.forEach(t => addTaskRow(list, ds, t.name, t.cat, t.time));
       updateDayTotal();
     }
@@ -195,21 +248,14 @@
     function addTaskRow(wrapper, ds, name='', catId='', time=''){
       const row = taskTpl.content.firstElementChild.cloneNode(true);
       const nameEl = row.querySelector('.t-name'); const catEl = row.querySelector('.t-cat'); const timeEl = row.querySelector('.t-time');
-      // Fill categories
       fillCatOptions(catEl, catId);
       nameEl.value = name; timeEl.value = time;
-
-      // Keyboard: Enter on name moves to time, Enter on time adds new row
       nameEl.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); timeEl.focus(); } });
       timeEl.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); const nr = addTaskRow(wrapper, ds); nr.querySelector('.t-name').focus(); saveDay(ds); } });
-
-      // Change handlers
       nameEl.addEventListener('input', () => { saveDay(ds); });
       timeEl.addEventListener('input', () => { saveDay(ds); updateDayTotal(); });
       catEl.addEventListener('change', () => { saveDay(ds); renderLog(); });
-
       row.querySelector('.t-del').addEventListener('click', () => { row.remove(); saveDay(ds); updateDayTotal(); renderLog(); });
-
       wrapper.appendChild(row);
       return row;
     }
@@ -220,25 +266,6 @@
       for (const c of categories) { const o=document.createElement('option'); o.value=c.id; o.textContent=c.name; if (c.id===selectedId) o.selected=true; selectEl.appendChild(o); }
     }
 
-    function saveDay(ds){
-      const rows = Array.from(dayCard.querySelectorAll('.task'));
-      store[ds] = rows.map(r => ({
-        name: r.querySelector('.t-name').value.trim(),
-        cat: r.querySelector('.t-cat').value,
-        time: r.querySelector('.t-time').value
-      })).filter(t => t.name || t.time || t.cat);
-      localStorage.setItem(KEY, JSON.stringify(store));
-      renderLog();
-    }
-
-    function parseTimeToMinutes(str){ if (!str) return 0; const [h,m] = str.split(':').map(Number); return (isFinite(h)&&isFinite(m)) ? h*60+m : 0; }
-    function minutesToHm(mins){ const h=Math.floor(mins/60); const m=mins%60; return `${h}h ${String(m).padStart(2,'0')}m`; }
-    function updateDayTotal(){
-      const total = Array.from(dayCard.querySelectorAll('.t-time')).reduce((acc,el)=>acc+parseTimeToMinutes(el.value),0);
-      const el = document.getElementById('dayTotal'); if (el) el.textContent = minutesToHm(total);
-    }
-
-    // Running log
     const logWrap = document.getElementById('logWrap');
     const logBody = document.getElementById('logBody');
     const logTotal = document.getElementById('logTotal');
@@ -250,7 +277,15 @@
       for (const c of categories) { const o=document.createElement('option'); o.value=c.id; o.textContent=c.name; filterCat.appendChild(o); }
     }
 
-    function renderLog(){
+    async function renderLog(){
+      if (USE_SERVER) {
+        try {
+          const data = await serverGet('/api/log');
+          // Merge into local cache for quick client filter
+          store = data.days || {};
+          localStorage.setItem(KEY, JSON.stringify(store));
+        } catch(e) { /* keep local */ }
+      }
       const entries = [];
       for (const ds of Object.keys(store)){
         for (const t of store[ds]){ entries.push({ date: ds, name: t.name || '', time: t.time || '', cat: t.cat || '' }); }
@@ -274,7 +309,6 @@
 
     function escapeHtml(s){ return s.replace(/[&<>\"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c])); }
 
-    // Categories modal logic
     const catModal = document.getElementById('catModal');
     const catList = document.getElementById('catList');
     const newCatName = document.getElementById('newCatName');
@@ -292,37 +326,38 @@
                         `<button class="danger c-del" data-id="${c.id}">×</button>`;
         catList.appendChild(row);
       }
-      // Hook up events
       catList.querySelectorAll('.c-name').forEach(el => el.addEventListener('input', onEditCat));
       catList.querySelectorAll('.c-color').forEach(el => el.addEventListener('input', onEditCat));
       catList.querySelectorAll('.c-del').forEach(el => el.addEventListener('click', onDeleteCat));
     }
 
-    function onEditCat(e){
+    async function onEditCat(e){
       const id = e.target.getAttribute('data-id');
       const idx = categories.findIndex(c => c.id === id);
       if (idx === -1) return;
       if (e.target.classList.contains('c-name')) categories[idx].name = e.target.value;
       if (e.target.classList.contains('c-color')) categories[idx].color = e.target.value;
       localStorage.setItem(CAT_KEY, JSON.stringify(categories));
-      // refresh selects and log
+      if (USE_SERVER) { try { await serverPut('/api/categories', { categories }); } catch(e){} }
       refreshAllCatSelects(); renderFilter(); renderLog();
     }
 
-    function onDeleteCat(e){
+    async function onDeleteCat(e){
       const id = e.target.getAttribute('data-id');
       categories = categories.filter(c => c.id !== id);
       localStorage.setItem(CAT_KEY, JSON.stringify(categories));
+      if (USE_SERVER) { try { await serverPut('/api/categories', { categories }); } catch(e){} }
       renderCatList(); refreshAllCatSelects(); renderFilter(); renderLog();
     }
 
-    document.getElementById('addCat').addEventListener('click', () => {
+    document.getElementById('addCat').addEventListener('click', async () => {
       const name = newCatName.value.trim(); const color = newCatColor.value;
       if (!name) return;
       const id = name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
       if (categories.some(c => c.id === id)) { alert('Category exists'); return; }
       categories.push({ id, name, color });
       localStorage.setItem(CAT_KEY, JSON.stringify(categories));
+      if (USE_SERVER) { try { await serverPut('/api/categories', { categories }); } catch(e){} }
       newCatName.value=''; renderCatList(); refreshAllCatSelects(); renderFilter(); renderLog();
     });
 
@@ -337,7 +372,6 @@
     document.getElementById('closeCats').addEventListener('click', closeModal);
     catModal.addEventListener('click', (e)=>{ if (e.target === catModal) closeModal(); });
 
-    // Controls
     document.getElementById('addTask').addEventListener('click', () => {
       const ds = daySelect.value; const list = dayCard.querySelector('.tasks'); const row = addTaskRow(list, ds); row.querySelector('.t-name').focus(); saveDay(ds);
     });
@@ -345,10 +379,25 @@
     document.getElementById('toggleLog').addEventListener('click', () => { logWrap.style.display = logWrap.style.display === 'none' ? '' : 'none'; });
     filterCat.addEventListener('change', renderLog);
 
-    // Initial paint
-    renderFilter();
-    renderDay(todayStr);
-    renderLog();
+    async function init() {
+      await ensureDefaultCategories();
+      if (USE_SERVER) {
+        try {
+          const r = await serverGet('/api/categories');
+          if (Array.isArray(r.categories) && r.categories.length) {
+            categories = r.categories;
+            localStorage.setItem(CAT_KEY, JSON.stringify(categories));
+          } else {
+            await serverPut('/api/categories', { categories });
+          }
+        } catch(e) { /* keep local */ }
+      }
+      renderFilter();
+      await renderDay(todayStr);
+      renderLog();
+    }
+
+    init();
   </script>
 </body>
 </html>
