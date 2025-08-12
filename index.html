@@ -1,19 +1,4 @@
-<!--
-Files in this canvas:
-1) index.html  (frontend with MongoDB sync)
-2) server.js   (Express API for MongoDB Atlas Cluster0)
-3) .env.sample (env vars)
 
-How it works
-- The frontend keeps instant localStorage writes for offline use, then syncs to the server.
-- Set API_BASE in the HTML to your backend URL. For local dev use http://localhost:8787
-- Start the server with `node server.js` after creating a .env from .env.sample.
-- Collections: tasklog_days, tasklog_categories
--->
-
-<!-- ============================
-= 1) index.html
-============================= -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -80,7 +65,7 @@ How it works
 <body>
   <header>
     <div class="bar">
-      <h1>100 Day Task Log</h1>
+      <h1>100 Day Task Log New</h1>
       <div class="flex">
         <label for="daySelect" class="muted">Day</label>
         <select id="daySelect"></select>
